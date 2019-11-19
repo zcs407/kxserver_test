@@ -367,7 +367,7 @@ func GetTaskidsByCreatetime(ctx *gin.Context) {
 		log.Println("agency id: "+agencyid+" get taskids info from kx error:", "createtime agencyid sign can't be null")
 		resp(ctx, "4000", "agency id: "+agencyid+" get taskids info from kx error:", "createtime agencyid sign can't be null")
 	}
-	res, err := http.Post("http://127.0.0.1:8891/api/v1/agency/kuaixuan/task/taskids", "application/json", bytes.NewBuffer(jsona))
+	res, err := http.Post("http://www.speedyrender.cn/:8890/api/v1/agency/kuaixuan/task/idlist", "application/json", bytes.NewBuffer(jsona))
 	if err != nil {
 		respBody, _ := ioutil.ReadAll(res.Body)
 		log.Println("快渲回复的信息", respBody)
@@ -418,7 +418,7 @@ func GetTaskInfo(ctx *gin.Context) {
 		log.Println("agency id: "+agencyid+" get task info from kx error:", "createtime agencyid sign can't be null")
 		resp(ctx, "4000", "agency id: "+agencyid+" get task info from kx error:", "createtime agencyid sign can't be null")
 	}
-	res, err := http.Post("http://127.0.0.1:8891/api/v1/agency/kuaixuan/task/taskinfo", "application/json", bytes.NewBuffer(jsona))
+	res, err := http.Post("http://www.speedyrender.cn/:8890/api/v1/agency/kuaixuan/task/info", "application/json", bytes.NewBuffer(jsona))
 	if err != nil {
 		respBody, _ := ioutil.ReadAll(res.Body)
 		log.Println("快渲回复的信息", respBody)
@@ -470,7 +470,7 @@ func GetFrameInfo(ctx *gin.Context) {
 		log.Println("agency id: "+agencyid+" get task info from kx error:", "createtime agencyid sign can't be null")
 		resp(ctx, "4000", "agency id: "+agencyid+" get task info from kx error:", "createtime agencyid sign can't be null")
 	}
-	res, err := http.Post("http://127.0.0.1:8891/api/v1/agency/kuaixuan/task/frameinfo", "application/json", bytes.NewBuffer(jsona))
+	res, err := http.Post("http://www.speedyrender.cn/:8890/api/v1/agency/kuaixuan/task/frameinfo", "application/json", bytes.NewBuffer(jsona))
 	if err != nil {
 		respBody, _ := ioutil.ReadAll(res.Body)
 		log.Println("快渲回复的信息", respBody)

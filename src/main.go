@@ -1,9 +1,8 @@
 package main
 
 import (
-	//"encoding/json"
 	"github.com/gin-gonic/gin"
-	"kxagency_test/src/controller"
+	"kxserver_test/src/controller"
 	"log"
 )
 
