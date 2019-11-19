@@ -352,11 +352,13 @@ func GetTaskidsByCreatetime(ctx *gin.Context) {
 	if err != nil {
 		log.Println("获取任务id列表失败,序列化错误: ", err)
 		resp(ctx, "4000", "获取任务id列表失败,序列化错误", err)
+		return
 	}
 	sign, err = RsaSignWithSha256(dataByte, prvkey)
 	if err != nil {
 		log.Println("签名失败", err)
 		resp(ctx, "4000", "agency id: "+agencyid+" get taskids info from kx sign failed:", err)
+		return
 	}
 	log.Println("签名成功,", hex.EncodeToString(sign))
 	jsonData["agencyid"] = agencyid
@@ -366,8 +368,9 @@ func GetTaskidsByCreatetime(ctx *gin.Context) {
 	if createtime == 0 || len(agencyid) == 0 || len(sign) == 0 {
 		log.Println("agency id: "+agencyid+" get taskids info from kx error:", "createtime agencyid sign can't be null")
 		resp(ctx, "4000", "agency id: "+agencyid+" get taskids info from kx error:", "createtime agencyid sign can't be null")
+		return
 	}
-	res, err := http.Post("http://www.speedyrender.cn/:8890/api/v1/agency/kuaixuan/task/idlist", "application/json", bytes.NewBuffer(jsona))
+	res, err := http.Post("https://www.speedyrender.cn:8890/api/v1/kuaixuan/agency/task/idlist", "application/json", bytes.NewBuffer(jsona))
 	if err != nil {
 		respBody, _ := ioutil.ReadAll(res.Body)
 		log.Println("快渲回复的信息", respBody)
@@ -376,6 +379,7 @@ func GetTaskidsByCreatetime(ctx *gin.Context) {
 		if err != nil {
 			log.Println("连接错误,反序列化错误  error:", err)
 			resp(ctx, "4000", "agency id: "+agencyid+" get taskids info from kx", err)
+			return
 		}
 	}
 	respBody, _ := ioutil.ReadAll(res.Body)
@@ -384,6 +388,7 @@ func GetTaskidsByCreatetime(ctx *gin.Context) {
 	if err != nil {
 		log.Println("发送数据成功,反序列化出错 error:", err)
 		resp(ctx, "4000", "agency id: "+agencyid+" get taskids info from kx", err)
+		return
 	}
 	log.Println("agency id: " + agencyid + " get taskids info from kx success:")
 	resp(ctx, "2000", "agency id: "+agencyid+" get taskids info from kx", respmap)
@@ -403,11 +408,13 @@ func GetTaskInfo(ctx *gin.Context) {
 	if err != nil {
 		log.Println("获取任务信息失败,序列化错误: ", err)
 		resp(ctx, "4000", "获取任务信息失败,序列化错误", err)
+		return
 	}
 	sign, err = RsaSignWithSha256(dataByte, prvkey)
 	if err != nil {
 		log.Println("签名失败", err)
 		resp(ctx, "4000", "agency id: "+agencyid+" get task info  from kx sign failed:", err)
+		return
 	}
 	log.Println("签名成功,", hex.EncodeToString(sign))
 	jsonData["agencyid"] = agencyid
@@ -418,7 +425,7 @@ func GetTaskInfo(ctx *gin.Context) {
 		log.Println("agency id: "+agencyid+" get task info from kx error:", "createtime agencyid sign can't be null")
 		resp(ctx, "4000", "agency id: "+agencyid+" get task info from kx error:", "createtime agencyid sign can't be null")
 	}
-	res, err := http.Post("http://www.speedyrender.cn/:8890/api/v1/agency/kuaixuan/task/info", "application/json", bytes.NewBuffer(jsona))
+	res, err := http.Post("https://www.speedyrender.cn:8890/api/v1/kuaixuan/agency/task/info", "application/json", bytes.NewBuffer(jsona))
 	if err != nil {
 		respBody, _ := ioutil.ReadAll(res.Body)
 		log.Println("快渲回复的信息", respBody)
@@ -427,6 +434,7 @@ func GetTaskInfo(ctx *gin.Context) {
 		if err != nil {
 			log.Println("连接错误,反序列化错误  error:", err)
 			resp(ctx, "4000", "agency id: "+agencyid+" get task info from kx", err)
+			return
 		}
 	}
 	respBody, _ := ioutil.ReadAll(res.Body)
@@ -435,6 +443,7 @@ func GetTaskInfo(ctx *gin.Context) {
 	if err != nil {
 		log.Println("发送数据成功,反序列化出错 error:", err)
 		resp(ctx, "4000", "agency id: "+agencyid+" get task info from kx", err)
+		return
 	}
 	log.Println("agency id: " + agencyid + " get task info from kx success:")
 	resp(ctx, "2000", "agency id: "+agencyid+" get task info from kx", respmap)
@@ -455,11 +464,13 @@ func GetFrameInfo(ctx *gin.Context) {
 	if err != nil {
 		log.Println("获取任务帧失败,序列化错误: ", err)
 		resp(ctx, "4000", "获取任务帧信息失败,序列化错误", err)
+		return
 	}
 	sign, err = RsaSignWithSha256(dataByte, prvkey)
 	if err != nil {
 		log.Println("签名失败", err)
 		resp(ctx, "4000", "task id: "+strconv.FormatInt(agencydata.TaskId, 10)+" get frame info sign failed:", err)
+		return
 	}
 	log.Println("签名成功,", hex.EncodeToString(sign))
 	jsonData["agencyid"] = agencyid
@@ -469,8 +480,9 @@ func GetFrameInfo(ctx *gin.Context) {
 	if agencydata.TaskId == 0 || len(agencyid) == 0 || len(sign) == 0 {
 		log.Println("agency id: "+agencyid+" get task info from kx error:", "createtime agencyid sign can't be null")
 		resp(ctx, "4000", "agency id: "+agencyid+" get task info from kx error:", "createtime agencyid sign can't be null")
+		return
 	}
-	res, err := http.Post("http://www.speedyrender.cn/:8890/api/v1/agency/kuaixuan/task/frameinfo", "application/json", bytes.NewBuffer(jsona))
+	res, err := http.Post("https://www.speedyrender.cn:8890/api/v1/kuaixuan/agency/task/frameinfo", "application/json", bytes.NewBuffer(jsona))
 	if err != nil {
 		respBody, _ := ioutil.ReadAll(res.Body)
 		log.Println("快渲回复的信息", respBody)
@@ -479,6 +491,7 @@ func GetFrameInfo(ctx *gin.Context) {
 		if err != nil {
 			log.Println("连接错误,反序列化错误  error:", err)
 			resp(ctx, "4000", "agency id: "+agencyid+" add user info from kx", err)
+			return
 		}
 	}
 	respBody, _ := ioutil.ReadAll(res.Body)
@@ -487,6 +500,7 @@ func GetFrameInfo(ctx *gin.Context) {
 	if err != nil {
 		log.Println("发送数据成功,反序列化出错 error:", err)
 		resp(ctx, "4000", "agency id: "+agencyid+" add user info from kx", err)
+		return
 	}
 	log.Println("agency id: " + agencyid + " add user info from kx success:")
 	resp(ctx, "2000", "agency id: "+agencyid+" add user info from kx", respmap)
