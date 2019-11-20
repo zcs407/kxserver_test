@@ -192,16 +192,19 @@ func UserRegister(ctx *gin.Context) {
 	if err != nil {
 		log.Println("agency id: "+agencyid+" add user info from kx error:", err)
 		resp(ctx, "4000", "agency id: "+agencyid+" add user info from kx error:", err)
+		return
 	}
 	dataByte, err := json.Marshal(userList)
 	if err != nil {
 		log.Println("添加用户系列化错误: ", err)
 		resp(ctx, "4000", "添加用户系列化错误", err)
+		return
 	}
 	sign, err = RsaSignWithSha256(dataByte, prvkey)
 	if err != nil {
 		log.Println("签名失败", err)
 		resp(ctx, "4000", "agency id: "+agencyid+" add user info from kx sign failed:", err)
+		return
 	}
 	log.Println("签名成功,", hex.EncodeToString(sign))
 	jsonData["agencyid"] = agencyid
@@ -211,6 +214,7 @@ func UserRegister(ctx *gin.Context) {
 	if len(userList) == 0 || len(agencyid) == 0 || len(sign) == 0 {
 		log.Println("agency id: "+agencyid+" add user info from kx error:", "userlist agencyid sign can't be null")
 		resp(ctx, "4000", "agency id: "+agencyid+" add user info from kx error:", "userlist agencyid sign can't be null")
+		return
 	}
 	res, err := http.Post("http://127.0.0.1:8891/api/v1/agency/aaa/user/add", "application/json", bytes.NewBuffer(jsona))
 	if err != nil {
@@ -221,6 +225,7 @@ func UserRegister(ctx *gin.Context) {
 		if err != nil {
 			log.Println("连接错误,反序列化错误  error:", err)
 			resp(ctx, "4000", "agency id: "+agencyid+" add user info from kx", err)
+			return
 		}
 	}
 	respBody, _ := ioutil.ReadAll(res.Body)
@@ -229,6 +234,7 @@ func UserRegister(ctx *gin.Context) {
 	if err != nil {
 		log.Println("发送数据成功,反序列化出错 error:", err)
 		resp(ctx, "4000", "agency id: "+agencyid+" add user info from kx", err)
+		return
 	}
 	log.Println("agency id: " + agencyid + " add user info from kx success:")
 	resp(ctx, "2000", "agency id: "+agencyid+" add user info from kx", respmap)
@@ -239,16 +245,19 @@ func UserUpdate(ctx *gin.Context) {
 	if err != nil {
 		log.Println("agency id: "+agencyid+" update user info from kx error:", err)
 		resp(ctx, "4000", "agency id: "+agencyid+" update user info from kx error:", err)
+		return
 	}
 	dataByte, err := json.Marshal(userInfo)
 	if err != nil {
 		log.Println("更新用户系列化错误: ", err)
 		resp(ctx, "4000", "更新用户系列化错误", err)
+		return
 	}
 	sign, err = RsaSignWithSha256(dataByte, prvkey)
 	if err != nil {
 		log.Println("签名失败", err)
 		resp(ctx, "4000", "agency id: "+agencyid+" update user info from kx sign failed:", err)
+		return
 	}
 	log.Println("签名成功,", hex.EncodeToString(sign))
 	jsonData["agencyid"] = agencyid
@@ -258,6 +267,7 @@ func UserUpdate(ctx *gin.Context) {
 	if len(agencyid) == 0 || len(sign) == 0 {
 		log.Println("agency id: "+agencyid+" update user info from kx error:", "userlist agencyid sign can't be null")
 		resp(ctx, "4000", "agency id: "+agencyid+" update user info from kx error:", "userlist agencyid sign can't be null")
+		return
 	}
 	res, err := http.Post("http://127.0.0.1:8891/api/v1/agency/aaa/user/update", "application/json", bytes.NewBuffer(jsona))
 	if err != nil {
@@ -268,6 +278,7 @@ func UserUpdate(ctx *gin.Context) {
 		if err != nil {
 			log.Println("连接错误,反序列化错误  error:", err)
 			resp(ctx, "4000", "agency id: "+agencyid+" update user info from kx", err)
+			return
 		}
 	}
 	respBody, _ := ioutil.ReadAll(res.Body)
@@ -276,6 +287,7 @@ func UserUpdate(ctx *gin.Context) {
 	if err != nil {
 		log.Println("发送数据成功,反序列化出错 error:", err)
 		resp(ctx, "4000", "agency id: "+agencyid+" update user info from kx", err)
+		return
 	}
 	log.Println("agency id: " + agencyid + " update user info from kx success:")
 	resp(ctx, "2000", "agency id: "+agencyid+" update user info from kx", respmap)
@@ -290,16 +302,19 @@ func UserDelete(ctx *gin.Context) {
 	if err != nil {
 		log.Println("agency id: "+agencyid+" delete user info from kx error:", err)
 		resp(ctx, "4000", "agency id: "+agencyid+" delete user info from kx error:", err)
+		return
 	}
 	dataByte, err := json.Marshal(userInfo)
 	if err != nil {
 		log.Println("删除用户系列化错误: ", err)
 		resp(ctx, "4000", "删除用户系列化错误", err)
+		return
 	}
 	sign, err = RsaSignWithSha256(dataByte, prvkey)
 	if err != nil {
 		log.Println("签名失败", err)
 		resp(ctx, "4000", "agency id: "+agencyid+" delete user info from kx sign failed:", err)
+		return
 	}
 	log.Println("签名成功,", hex.EncodeToString(sign))
 	jsonData["agencyid"] = agencyid
@@ -309,6 +324,7 @@ func UserDelete(ctx *gin.Context) {
 	if len(agencyid) == 0 || len(sign) == 0 {
 		log.Println("agency id: "+agencyid+" delete user info from kx error:", "userlist agencyid sign can't be null")
 		resp(ctx, "4000", "agency id: "+agencyid+" delete user info from kx error:", "user agencyid sign can't be null")
+		return
 	}
 	res, err := http.Post("http://127.0.0.1:8891/api/v1/agency/aaa/user/delete", "application/json", bytes.NewBuffer(jsona))
 	if err != nil {
@@ -319,6 +335,7 @@ func UserDelete(ctx *gin.Context) {
 		if err != nil {
 			log.Println("连接错误,反序列化错误  error:", err)
 			resp(ctx, "4000", "agency id: "+agencyid+" delete user info from kx", err)
+			return
 		}
 	}
 	respBody, _ := ioutil.ReadAll(res.Body)
@@ -327,6 +344,7 @@ func UserDelete(ctx *gin.Context) {
 	if err != nil {
 		log.Println("发送数据成功,反序列化出错 error:", err)
 		resp(ctx, "4000", "agency id: "+agencyid+" update user info from kx", err)
+		return
 	}
 	log.Println("agency id: " + agencyid + " update user info from kx success:")
 	resp(ctx, "2000", "agency id: "+agencyid+" update user info from kx", respmap)
