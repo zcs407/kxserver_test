@@ -93,7 +93,6 @@ type renderFrame struct {
 	ID               int64        `json:"id"`
 	Owner            int64        `json:"owner"`
 	OwnerName        string       `json:"ownername"`
-	AgencyID         int64        `json:"agencyid"`
 	AgencyUserID     int64        `json:"agencyuserid"`
 	RenderTaskID     int64        `json:"rendertaskid"` // RenderTask DB ID
 	FrameIndex       int          `json:"frameindex"`   // deadline Task frame index: 1000, max: 9999
@@ -108,6 +107,33 @@ type renderFrame struct {
 	LightJobGross            int64 `json:"lightjobgross"`            // 小光子任务最终费用
 	LightJobRenderTimeThread int64 `json:"lightjobrendertimethread"` // 小光子渲染的线程时
 	LightJobStatus           int   `json:"lightjobstatus"`           // 小光子任务状态
+}
+type grossInfo struct {
+	ID           int64  `json:"id"`           //任务id
+	Name         string `json:"name"`         //任务名称
+	Owner        int64  `json:"owner"`        //经销商用户在我方库中的用户id
+	OwnerName    string `json:"ownername"`    //经销商用户名
+	AgencyUserID int64  `json:"agencyuserid"` //经销商用户id
+	CreateTime   int64  `json:"createtime"`   //任务创建时间
+	//更新时变动
+	Type                    int          `json:"type"`                    //0: video, 1: picture
+	Status                  int          `json:"status"`                  //任务状态
+	RenderOutputFiles       []fileObject `json:"renderoutputfiles"`       //渲染输出文件切片(多文件)
+	FrameCount              int          `json:"framecount"`              //帧数
+	Gross                   int64        `json:"gross"`                   //最终费用
+	FrameCompleted          int          `json:"framecompleted"`          //完成帧数
+	StartTime               int64        `json:"starttime"`               //渲染的开始时间
+	CompletedTime           int64        `json:"completedtime"`           //渲染的完成时间
+	MachineLimit            int          `json:"machinelimit"`            //核数同步数据时需要处理为24倍
+	Services                int          `json:"services"`                //任务分配的服务器数量
+	RenderTimeThreadTotal   int64        `json:"rendertimethreadtotal"`   //渲染线程耗时总和
+	LightJobGross           int64        `json:"lightjobgross"`           //小光子任务总费用
+	LightJobTimeThreadTotal int64        `json:"lightjobtimethreadtotal"` //小光子渲染的线程时
+	RenderZipFile           string       `json:"renderzipfile"`           //渲染源文件zip包
+	Camera                  string       `json:"camera"`
+	Action                  int          `json:"action"`
+	FrameIndex              int          `json:"frameindex"`
+	FrameType               int          `json:"frametype"`
 }
 type fileObject struct {
 	//文件的名称,可用于下载已完成文件,下载完成文件可参考:快渲经销商Api文档-任务已完成文件下载接口
@@ -127,8 +153,8 @@ func TaskCreateInfo(ctx *gin.Context) {
 		log.Println("kuaixuan create task info sync error:", err)
 		resp(ctx, "4000", "kuaixuan create task info sync error:", err)
 	}
-	jsonMap := taskJsonMapHandler(jsonTaskInfo)
-	log.Println("kuaixuan create task info sync success, the task info is", jsonMap)
+	//jsonMap := taskJsonMapHandler(jsonTaskInfo)
+	//log.Println("kuaixuan create task info sync success, the task info is", jsonMap)
 	resp(ctx, "200", "kuaixuan create task info sync success, the task info is", jsonTaskInfo)
 }
 func TaskUpdateInfo(ctx *gin.Context) {
@@ -138,8 +164,8 @@ func TaskUpdateInfo(ctx *gin.Context) {
 		log.Println("kuaixuan update task info sync error:", err)
 		resp(ctx, "4000", "kuaixuan update task info sync error:", err)
 	}
-	jsonMap := taskJsonMapHandler(jsonTaskInfo)
-	log.Println("kuaixuan update task info sync success, the task info is", jsonMap)
+	//jsonMap := taskJsonMapHandler(jsonTaskInfo)
+	//log.Println("kuaixuan update task info sync success, the task info is", jsonMap)
 	resp(ctx, "200", "kuaixuan update task info sync success, the task info is", jsonTaskInfo)
 }
 func TaskDeleteInfo(ctx *gin.Context) {
@@ -154,13 +180,13 @@ func TaskDeleteInfo(ctx *gin.Context) {
 	resp(ctx, "200", "kuaixuan delete task info sync success, the task info is", jsonTaskInfo)
 }
 func TaskGrossInfo(ctx *gin.Context) {
-	var jsonTaskInfo taskInfo
+	var jsonTaskInfo grossInfo
 	err := ctx.BindJSON(&jsonTaskInfo)
 	if err != nil {
 		log.Println("kuaixuan task gross info sync error:", err)
 		resp(ctx, "4000", "kuaixuan task gross info sync error:", err)
 	}
-	jsonMap := taskJsonMapHandler(jsonTaskInfo)
+	jsonMap := taskGrossJsonMapHandler(jsonTaskInfo)
 	log.Println("kuaixuan  task gross info sync success, the task info is", jsonMap)
 	resp(ctx, "200", "kuaixuan task gross info sync success, the task info is", jsonTaskInfo)
 }
@@ -271,15 +297,8 @@ func UserUpdate(ctx *gin.Context) {
 	}
 	res, err := http.Post("http://127.0.0.1:8891/api/v1/agency/aaa/user/update", "application/json", bytes.NewBuffer(jsona))
 	if err != nil {
-		respBody, _ := ioutil.ReadAll(res.Body)
-		log.Println("快渲回复的信息", respBody)
-		respmap := make(map[string]interface{})
-		err = json.Unmarshal(respBody, &respmap)
-		if err != nil {
-			log.Println("连接错误,反序列化错误  error:", err)
-			resp(ctx, "4000", "agency id: "+agencyid+" update user info from kx", err)
-			return
-		}
+		log.Println("http post error: ",err)
+		return
 	}
 	respBody, _ := ioutil.ReadAll(res.Body)
 	respmap := make(map[string]interface{})
@@ -348,6 +367,118 @@ func UserDelete(ctx *gin.Context) {
 	}
 	log.Println("agency id: " + agencyid + " update user info from kx success:")
 	resp(ctx, "2000", "agency id: "+agencyid+" update user info from kx", respmap)
+}
+
+func UserIdList(ctx *gin.Context) {
+	type agencyData struct {
+		AgencyId int64 `json:"agencyid"`
+	}
+	agencydata := agencyData{}
+	err := ctx.BindJSON(&agencydata)
+	if err != nil {
+		log.Println("无法获取request中的时间戳")
+		return
+	}
+	dataByte, err := json.Marshal(agencydata)
+	if err != nil {
+		log.Println("获取用户id列表失败,序列化错误: ", err)
+		resp(ctx, "4000", "获取用户id列表失败,序列化错误", err)
+		return
+	}
+	sign, err = RsaSignWithSha256(dataByte, prvkey)
+	if err != nil {
+		log.Println("签名失败", err)
+		resp(ctx, "4000", "agency id: "+agencyid+" get user id list  from kx sign failed:", err)
+		return
+	}
+	log.Println("签名成功,", hex.EncodeToString(sign))
+	jsonData["agencyid"] = agencyid
+	jsonData["data"] = string(dataByte)
+	jsonData["sign"] = hex.EncodeToString(sign)
+	jsona, err := json.Marshal(jsonData)
+	if len(agencyid) == 0 || len(sign) == 0 {
+		log.Println("agency id: "+agencyid+" get user id list from kx error:", " agencyid sign can't be null")
+		resp(ctx, "4000", "agency id: "+agencyid+" get user id list from kx error:", " agencyid sign can't be null")
+		return
+	}
+	res, err := http.Post("https://www.speedyrender.cn:8890/api/v1/agency/aaa/user/idlist", "application/json", bytes.NewBuffer(jsona))
+	if err != nil {
+		respBody, _ := ioutil.ReadAll(res.Body)
+		log.Println("快渲回复的信息", respBody)
+		respmap := make(map[string]interface{})
+		err = json.Unmarshal(respBody, &respmap)
+		if err != nil {
+			log.Println("连接错误,反序列化错误  error:", err)
+			resp(ctx, "4000", "agency id: "+agencyid+" get user id list from kx", err)
+			return
+		}
+	}
+	respBody, _ := ioutil.ReadAll(res.Body)
+	respmap := make(map[string]interface{})
+	err = json.Unmarshal(respBody, &respmap)
+	if err != nil {
+		log.Println("发送数据成功,反序列化出错 error:", err)
+		resp(ctx, "4000", "agency id: "+agencyid+" get user id list from kx", err)
+		return
+	}
+	log.Println("agency id: " + agencyid + " get user id list from kx success:")
+	resp(ctx, "2000", "agency id: "+agencyid+" get user id list from kx", respmap)
+}
+
+func UserInfo(ctx *gin.Context) {
+	type agencyData struct {
+		Id int64 `json:"id"`
+	}
+	agencydata := agencyData{}
+	err := ctx.BindJSON(&agencydata)
+	if err != nil {
+		log.Println("无法获取request中的时间戳")
+		return
+	}
+	dataByte, err := json.MarshalIndent(agencydata,"","")
+	if err != nil {
+		log.Println("获取用户信息失败,序列化错误: ", err)
+		resp(ctx, "4000", "获取用户信息失败,序列化错误", err)
+		return
+	}
+	sign, err = RsaSignWithSha256(dataByte, prvkey)
+	if err != nil {
+		log.Println("签名失败", err)
+		resp(ctx, "4000", "agency id: "+agencyid+" get user info  from kx sign failed:", err)
+		return
+	}
+	log.Println("签名成功,", hex.EncodeToString(sign))
+	jsonData["agencyid"] = agencyid
+	jsonData["data"] = string(dataByte)
+	jsonData["sign"] = hex.EncodeToString(sign)
+	jsona, err := json.Marshal(jsonData)
+	if agencydata.Id == 0 || len(agencyid) == 0 || len(sign) == 0 {
+		log.Println("agency id: "+agencyid+" get user info from kx error:", " agencyid userid sign can't be null")
+		resp(ctx, "4000", "agency id: "+agencyid+" get user info from kx error:", " agencyid sign can't be null")
+		return
+	}
+	res, err := http.Post("https://www.speedyrender.cn:8890/api/v1/agency/aaa/user/info", "application/json", bytes.NewBuffer(jsona))
+	if err != nil {
+		respBody, _ := ioutil.ReadAll(res.Body)
+		log.Println("快渲回复的信息", respBody)
+		respmap := make(map[string]interface{})
+		err = json.Unmarshal(respBody, &respmap)
+		if err != nil {
+			log.Println("连接错误,反序列化错误  error:", err)
+			resp(ctx, "4000", "agency id: "+agencyid+" get user info from kx", err)
+			return
+		}
+	}
+	respBody, _ := ioutil.ReadAll(res.Body)
+	respmap := make(map[string]interface{})
+	err = json.Unmarshal(respBody, &respmap)
+	if err != nil {
+		log.Println("发送数据成功,反序列化出错 error:", err)
+		resp(ctx, "4000", "agency id: "+agencyid+" get user info from kx", err)
+		return
+	}
+	log.Println("agency id: " + agencyid + " get user info from kx success:")
+	resp(ctx, "2000", "agency id: "+agencyid+" get user info from kx", respmap)
 }
 
 func GetTaskidsByCreatetime(ctx *gin.Context) {
@@ -530,9 +661,10 @@ func GetFileUrl(ctx *gin.Context) {
 		Uid      int64  `json:"id"`
 		FimeName string `json:"fimename"`
 	}
-	var senddata struct {
+	type sendData struct {
 		Uid int64 `json:"id"`
 	}
+	senddata := sendData{}
 	err := ctx.BindJSON(&data)
 	if err != nil {
 		log.Println("无法获取request中的用户id")
@@ -564,12 +696,12 @@ func GetFileUrl(ctx *gin.Context) {
 		log.Println("无法创建接收下载的文件错误: ", err)
 	}
 	defer dstFile.Close()
-	res, err := http.Post("http://123.55.233.97:8889/api/v1/agency/kuaixuan/task/download"+data.FimeName, "application/json", bytes.NewBuffer(jsona))
+	res, err := http.Post("http://123.55.235.42:8889/api/v1/kuaixuan/agency/task/download"+data.FimeName, "application/json", bytes.NewBuffer(jsona))
 	if err != nil {
 		respBody, _ := ioutil.ReadAll(res.Body)
 		log.Println("快渲回复的信息", respBody)
 	}
-	log.Println("访问的路径为:", "http://123.55.233.97:8889/api/v1/agency/kuaixuan/task/download"+data.FimeName)
+	log.Println("访问的路径为:", "http://123.55.233.97:8889/api/v1/kuaixuan/agency/task/download"+data.FimeName)
 	_, err = io.Copy(dstFile, res.Body)
 	if err != nil {
 		log.Println("无法接收下载的文件内容,错误为: ", err)
@@ -655,13 +787,78 @@ func taskJsonMapHandler(jsonTaskInfo taskInfo) map[string]interface{} {
 	}
 	return jsonMap
 }
+func taskGrossJsonMapHandler(jsonTaskInfo grossInfo) map[string]interface{} {
+	jsonMap := make(map[string]interface{})
+	jsonMap["任务id"] = jsonTaskInfo.ID
+	jsonMap["任务名"] = jsonTaskInfo.Name
+	jsonMap["本库用户id"] = jsonTaskInfo.Owner
+	jsonMap["用户名"] = jsonTaskInfo.OwnerName
+	jsonMap["用户在经销商库中的id"] = jsonTaskInfo.AgencyUserID
+	jsonMap["创建时间"] = jsonTaskInfo.CreateTime
+	jsonMap["帧位置"] = jsonTaskInfo.FrameIndex
+	jsonMap["帧类型"] = jsonTaskInfo.FrameType
+	switch jsonTaskInfo.Type {
+	case 0:
+		jsonMap["任务类型"] = "动画类型"
+	case 1:
+		jsonMap["任务类型"] = "效果图类型"
+	default:
+		jsonMap["任务类型"] = "错误的任务类型"
+	}
+	//汉化任务状态
+	switch jsonTaskInfo.Status {
+	case 0:
+		jsonMap["任务状态"] = "等待文件上传"
+	case 1:
+		jsonMap["任务状态"] = "渲染中"
+	case 2:
+		jsonMap["任务状态"] = "任务完成"
+	case 3:
+		jsonMap["任务状态"] = "任务暂停"
+	case 4:
+		jsonMap["任务状态"] = "任务失败"
+	case 5:
+		jsonMap["任务状态"] = "等待其他依赖任务完成后继续任务"
+	case 6:
+		jsonMap["任务状态"] = "上传文件中"
+	case 7:
+		jsonMap["任务状态"] = "处理上传后的文件,提供任务使用"
+	case 8:
+		jsonMap["任务状态"] = "任务队列"
+	default:
+		jsonMap["任务状态"] = "错误的状态"
+	}
+	jsonMap["输出文件"] = jsonTaskInfo.RenderOutputFiles
+	jsonMap["总帧数"] = jsonTaskInfo.FrameCount
+	jsonMap["总费用"] = jsonTaskInfo.Gross
+	jsonMap["完成帧数"] = jsonTaskInfo.FrameCompleted
+	jsonMap["开始渲染时间"] = jsonTaskInfo.StartTime
+	jsonMap["结束时间"] = jsonTaskInfo.CompletedTime
+	jsonMap["渲染总耗时"] = jsonTaskInfo.RenderTimeThreadTotal
+	jsonMap["小光子总费用"] = jsonTaskInfo.LightJobGross
+	jsonMap["小光子总耗时"] = jsonTaskInfo.LightJobTimeThreadTotal
+	jsonMap["渲染任务源文件"] = jsonTaskInfo.RenderZipFile
+	jsonMap["相机"] = jsonTaskInfo.Camera
+	switch jsonTaskInfo.Action {
+	case 0:
+		jsonMap["操作"] = "创建任务"
+	case 1:
+		jsonMap["操作"] = "更新任务状态"
+	case 2:
+		jsonMap["操作"] = "任务完成并扣费"
+	case 3:
+		jsonMap["操作"] = "删除任务"
+	default:
+		jsonMap["操作"] = "未知操作"
+	}
+	return jsonMap
+}
 func frameJsonMapHandler(jsonFrameInfo renderFrame) map[string]interface{} {
 	jsonMap := make(map[string]interface{})
 	jsonMap["渲染任务id"] = jsonFrameInfo.ID
 	jsonMap["所属任务id"] = jsonFrameInfo.RenderTaskID
 	jsonMap["经销商用户id"] = jsonFrameInfo.AgencyUserID
 	jsonMap["用户名"] = jsonFrameInfo.OwnerName
-	jsonMap["经销商id"] = jsonFrameInfo.AgencyID
 	jsonMap["用户在经销商库中的id"] = jsonFrameInfo.AgencyUserID
 	jsonMap["状态"] = jsonFrameInfo.Status
 	switch jsonFrameInfo.Type {
@@ -701,8 +898,8 @@ func RsaSignWithSha256(data []byte, keyBytes []byte) ([]byte, error) {
 	}
 	privateKey, err := x509.ParsePKCS1PrivateKey(block.Bytes)
 	if err != nil {
-		fmt.Println("ParsePKCS8PrivateKey err", err)
-		panic(err)
+		fmt.Println("ParsePKCS1PrivateKey err", err)
+		return nil, errors.New("private key error")
 	}
 	signature, err := rsa.SignPKCS1v15(rand.Reader, privateKey, crypto.SHA256, hashed)
 	if err != nil {

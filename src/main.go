@@ -20,6 +20,8 @@ func main() {
 		r1.POST("useradd",controller.UserRegister)
 		r1.POST("userupdate",controller.UserUpdate)
 		r1.POST("userdelete",controller.UserDelete)
+		r1.POST("useridlist",controller.UserIdList)
+		r1.POST("userinfo",controller.UserInfo)
 		r1.POST("taskids",controller.GetTaskidsByCreatetime)
 		r1.POST("taskinfo",controller.GetTaskInfo)
 		r1.POST("frameinfo",controller.GetFrameInfo)
