@@ -427,7 +427,7 @@ func UserIdList(ctx *gin.Context) {
 
 func UserInfo(ctx *gin.Context) {
 	type agencyData struct {
-		Id int64 `json:"id"`
+		AgencyUserID int64 `json:"agencyuserid"`
 	}
 	agencydata := agencyData{}
 	err := ctx.BindJSON(&agencydata)
@@ -435,7 +435,7 @@ func UserInfo(ctx *gin.Context) {
 		log.Println("无法获取request中的时间戳")
 		return
 	}
-	dataByte, err := json.MarshalIndent(agencydata,"","")
+	dataByte, err := json.Marshal(&agencydata)
 	if err != nil {
 		log.Println("获取用户信息失败,序列化错误: ", err)
 		resp(ctx, "4000", "获取用户信息失败,序列化错误", err)
@@ -452,7 +452,7 @@ func UserInfo(ctx *gin.Context) {
 	jsonData["data"] = string(dataByte)
 	jsonData["sign"] = hex.EncodeToString(sign)
 	jsona, err := json.Marshal(jsonData)
-	if agencydata.Id == 0 || len(agencyid) == 0 || len(sign) == 0 {
+	if agencydata.AgencyUserID == 0 || len(agencyid) == 0 || len(sign) == 0 {
 		log.Println("agency id: "+agencyid+" get user info from kx error:", " agencyid userid sign can't be null")
 		resp(ctx, "4000", "agency id: "+agencyid+" get user info from kx error:", " agencyid sign can't be null")
 		return
@@ -658,11 +658,11 @@ func GetFrameInfo(ctx *gin.Context) {
 func GetFileUrl(ctx *gin.Context) {
 	var jsonData = make(map[string]interface{})
 	var data struct {
-		Uid      int64  `json:"id"`
+		AgencyUserID      int64  `json:"agencyuserid"`
 		FimeName string `json:"fimename"`
 	}
 	type sendData struct {
-		Uid int64 `json:"id"`
+		AgencyUserID int64 `json:"agencyuserid"`
 	}
 	senddata := sendData{}
 	err := ctx.BindJSON(&data)
@@ -670,45 +670,52 @@ func GetFileUrl(ctx *gin.Context) {
 		log.Println("无法获取request中的用户id")
 		return
 	}
-	if data.Uid == 0 || len(data.FimeName) == 0 {
+	if data.AgencyUserID == 0 || len(data.FimeName) == 0 {
 		log.Println("用户id和文件名不可为空 ")
 		return
 	}
-	senddata.Uid = data.Uid
+	log.Println("当前接收到的数据:",data)
+	senddata.AgencyUserID = data.AgencyUserID
 	dataByte, err := json.Marshal(senddata)
 	sign, err = RsaSignWithSha256(dataByte, prvkey)
 	if err != nil {
 		log.Println("签名失败", err)
 		resp(ctx, "4000", "agency id: "+agencyid+" get download file url  from kx sign failed:", err)
+		return
 	}
-	log.Println("签名成功,", hex.EncodeToString(sign))
+	//log.Println("签名成功,", hex.EncodeToString(sign))
 	jsonData["agencyid"] = agencyid
 	jsonData["data"] = string(dataByte)
 	jsonData["sign"] = hex.EncodeToString(sign)
 	jsona, err := json.Marshal(jsonData)
-	if data.Uid == 0 || len(agencyid) == 0 || len(sign) == 0 {
+	if data.AgencyUserID == 0 || len(agencyid) == 0 || len(sign) == 0 {
 		log.Println("agency id: "+agencyid+" get download file url from kx error:", "createtime agencyid sign can't be null")
 		resp(ctx, "4000", "agency id: "+agencyid+" get download file url from kx error:", "createtime agencyid sign can't be null")
+		return
 	}
 	//前序工作成功后创建本地文件,用于文件接收
+	log.Println("创建本地接收文件:","./aaa.zip")
 	dstFile, err := os.Create("./aaa.zip")
 	if err != nil {
 		log.Println("无法创建接收下载的文件错误: ", err)
+		return
 	}
 	defer dstFile.Close()
-	res, err := http.Post("http://123.55.235.42:8889/api/v1/kuaixuan/agency/task/download"+data.FimeName, "application/json", bytes.NewBuffer(jsona))
+	log.Println("访问的地址为:","http://171.8.235.53:8889/api/v1/kuaixuan/agency/task/download"+data.FimeName)
+	res, err := http.Post("http://171.8.235.53:8889/api/v1/kuaixuan/agency/task/download"+data.FimeName, "application/json", bytes.NewBuffer(jsona))
 	if err != nil {
 		respBody, _ := ioutil.ReadAll(res.Body)
 		log.Println("快渲回复的信息", respBody)
+		return
 	}
-	log.Println("访问的路径为:", "http://123.55.233.97:8889/api/v1/kuaixuan/agency/task/download"+data.FimeName)
 	_, err = io.Copy(dstFile, res.Body)
 	if err != nil {
 		log.Println("无法接收下载的文件内容,错误为: ", err)
+		return
 	}
 
 	log.Println("agency id: " + agencyid + " get download file url from kx success:")
-	resp(ctx, "2000", "agency id: "+agencyid+" get download file url from kx", nil)
+	resp(ctx, "2000", "agency id: "+agencyid+" get download file url from kx", res.Body)
 }
 
 func resp(ctx *gin.Context, code, info string, body interface{}) {
