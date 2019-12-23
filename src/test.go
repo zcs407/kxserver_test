@@ -1,9 +1,12 @@
 package main
 
 import (
+	"crypto/md5"
 	"errors"
+	"io"
 	"log"
 	"net/http"
+	"os"
 	"reflect"
 	"strconv"
 	"time"
@@ -67,7 +70,7 @@ func main1() {
 	log.Println("renderOutputDir: ",renderOutputDir," renderSourceDir: ",renderSourceDir)
 
 }
-func main()  {
+func main2()  {
 	logPreFix:="test"
 	httpClient := http.Client{Timeout: time.Second * 3}
 	err:=errors.New("aaa")
@@ -95,5 +98,18 @@ func main()  {
 		return
 	}
 	log.Println("test ok!!!!")
+
+}
+
+func main()  {
+	file, err := os.Create("./test1.go")
+	if err != nil {
+		log.Println(err)
+	}
+	md5h := md5.New()
+	defer  file.Close()
+	io.Copy(md5h,file)
+	abc := md5h.Sum([]byte(""))
+	log.Printf("%x",string(abc))
 
 }
