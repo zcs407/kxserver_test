@@ -3,6 +3,7 @@ package main
 import (
 	"crypto/md5"
 	"errors"
+	"fmt"
 	"io"
 	"log"
 	"net/http"
@@ -60,14 +61,19 @@ func getvaluehandler(w http.ResponseWriter, r *http.Request) {
 	log.Println(value)
 }
 func main1() {
-	renderzipfile:="/2019-12-18/06ced372-dec1-48c4-9d2c-fe070689e633.zip"
+	renderzipfile:="/2019-12-24/68179-测试-files/"
 	zipFilePath := renderzipfile[len(time.Unix(time.Now().Unix(), 0).Format("2006-01-02"+"/"))+1:]
-	log.Println("zipFilePath: ",zipFilePath,len(time.Unix(time.Now().Unix(), 0).Format("2006-01-02"+"/")))
-	renderZipFile := "/" + time.Unix(time.Now().Unix(), 0).Format("2006-01-02"+"/") + zipFilePath
-	log.Println("renderZipFile: ",renderZipFile)
-	renderOutputDir := "/" + time.Unix(time.Now().Unix(), 0).Format("2006-01-02"+"/") + strconv.FormatInt(68114, 10) + "-" + "熊猫——动画" + "-frames/"
-	renderSourceDir := "/" + time.Unix(time.Now().Unix(), 0).Format("2006-01-02"+"/") + strconv.FormatInt(68114, 10) + "-" + "熊猫——动画" + "-files/"
-	log.Println("renderOutputDir: ",renderOutputDir," renderSourceDir: ",renderSourceDir)
+
+	basepath := "getTaskBasePath"                                                                                                                                                      //./files/1610/2019-01-11
+	outputpath := basepath + "/" + time.Unix(1577170380, 0).Format("2006-01-02") + zipFilePath[len(time.Unix(time.Now().Unix(), 0).Format("2006-01-02"+"/")):]      //./files/1610/2019-01-11/68114-熊猫——动画-frames/
+	renderSourceDir := basepath + "/" + time.Unix(1577170380, 0).Format("2006-01-02") + zipFilePath[len(time.Unix(time.Now().Unix(), 0).Format("2006-01-02"+"/")):]
+
+	//log.Println("zipFilePath: ",zipFilePath,len(time.Unix(time.Now().Unix(), 0).Format("2006-01-02"+"/")))
+	//renderZipFile := "/" + time.Unix(time.Now().Unix(), 0).Format("2006-01-02"+"/") + zipFilePath
+	//log.Println("renderZipFile: ",renderZipFile)
+	//renderOutputDir := "/" + time.Unix(time.Now().Unix(), 0).Format("2006-01-02"+"/") + strconv.FormatInt(68114, 10) + "-" + "熊猫——动画" + "-frames/"
+	//renderSourceDir := "/" + time.Unix(time.Now().Unix(), 0).Format("2006-01-02"+"/") + strconv.FormatInt(68114, 10) + "-" + "熊猫——动画" + "-files/"
+	log.Println("renderOutputDir: ",outputpath," renderSourceDir: ",renderSourceDir)
 
 }
 func main2()  {
@@ -101,7 +107,7 @@ func main2()  {
 
 }
 
-func main()  {
+func main3()  {
 	file, err := os.Create("./test1.go")
 	if err != nil {
 		log.Println(err)
@@ -109,7 +115,8 @@ func main()  {
 	md5h := md5.New()
 	defer  file.Close()
 	io.Copy(md5h,file)
-	abc := md5h.Sum([]byte(""))
-	log.Printf("%x",string(abc))
+	abc := string(md5h.Sum([]byte("")))
+	fileMd5:=fmt.Sprintf("%x",abc)
+	log.Println(fileMd5)
 
 }

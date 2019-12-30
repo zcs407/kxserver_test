@@ -4,7 +4,6 @@ import (
 	"archive/zip"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
@@ -14,7 +13,7 @@ func main() {
 	//oldZipPath := "./oldSource.zip"
 	oldZipDir := "./oldTestDir"
 	//newZipPath := "./newSource.zip"
-	newZipDir := "./newTestDir"
+	//newZipDir := "./newTestDir"
 	//err:=fileUnzip(oldZipPath, oldZipDir)
 	//if err != nil {
 	//	log.Println("can't unzip this file :",oldZipPath," error: ",err)
@@ -28,22 +27,22 @@ func main() {
 
 	//pwd,_ := os.Getwd()
 	//获取文件或目录相关信息
-	fileInfoList, err := ioutil.ReadDir(newZipDir)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	for i := range fileInfoList {
-		srcFile:=newZipDir+"/"+fileInfoList[i].Name()
-		dstFile:= oldZipDir+"/"+fileInfoList[i].Name()
-		log.Println("开始替换文件,将new file:", srcFile, " 替换掉: ",dstFile)
-		_,err=fileCopy(srcFile,dstFile)
-		if err != nil {
-			log.Println("开始替换文件,将new file:", srcFile, " 替换掉: ",dstFile," error: ",err)
-			return
-		}
-	}
-	err=fileZip(oldZipDir,"./newSource001.zip")
+	//fileInfoList, err := ioutil.ReadDir(newZipDir)
+	//if err != nil {
+	//	log.Fatal(err)
+	//}
+	//
+	//for i := range fileInfoList {
+	//	srcFile := newZipDir + "/" + fileInfoList[i].Name()
+	//	dstFile := oldZipDir + "/" + fileInfoList[i].Name()
+	//	log.Println("开始替换文件,将new file:", srcFile, " 替换掉: ", dstFile)
+	//	_, err = fileCopy(srcFile, dstFile)
+	//	if err != nil {
+	//		log.Println("开始替换文件,将new file:", srcFile, " 替换掉: ", dstFile, " error: ", err)
+	//		return
+	//	}
+	//}
+	err := fileZip(oldZipDir, "./newSource001.zip")
 	if err != nil {
 		log.Println("无法压缩为zip文件")
 		return
@@ -84,30 +83,30 @@ func fileZip(srcFile string, destZip string) error {
 			return err
 		}
 
-		header.Name = path
+		//header.Name = path
 		if info.IsDir() {
-			//header.Name += "/"
+			header.Name += "/"
 			header.Method = zip.Deflate
+			log.Println(" head name: ", header.Name)
 		} else {
 			header.Method = zip.Deflate
-		}
-
-		writer, err := archive.CreateHeader(header)
-		if err != nil {
-			return err
-		}
-
-		if ! info.IsDir() {
-			file, err := os.Open(path)
+			writer, err := archive.CreateHeader(header)
 			if err != nil {
 				return err
 			}
-			defer file.Close()
-			_, err = io.Copy(writer, file)
+
+			if !info.IsDir() {
+				file, err := os.Open(path)
+				if err != nil {
+					return err
+				}
+				defer file.Close()
+				_, err = io.Copy(writer, file)
+			}
+			return err
 		}
 		return err
 	})
-
 	return err
 }
 
@@ -203,4 +202,16 @@ func fileCopy(srcFileFullPath, dstFileFullPath string) (int64, error) {
 	defer destination.Close()
 	nBytes, err := io.Copy(destination, source)
 	return nBytes, err
+}
+
+func main2() {
+	type aaa struct {
+		Name string
+		Age  int
+	}
+	bbb := aaa{
+		Name: "123",
+		Age:  100,
+	}
+	log.Println(bbb)
 }
